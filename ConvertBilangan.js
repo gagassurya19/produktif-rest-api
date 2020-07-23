@@ -31,6 +31,13 @@ app.post("/bilangan/:a/:b/:nilai", (req,res) => {
                 convert: a + " -> " + b,
                 result: parseInt(nilai,2).toString(16)
             }
+        } else{
+            response = {
+                Message: "Menampilkan Semua",
+                decimal: parseInt(nilai,2).toString(10),
+                octal: parseInt(nilai,2).toString(8),
+                hexadecimal: parseInt(nilai,2).toString(16)
+            }
         }
     } else if(a == "decimal"){
         if(b == "octal"){
@@ -49,6 +56,13 @@ app.post("/bilangan/:a/:b/:nilai", (req,res) => {
             response = {
                 convert: a + " -> " + b,
                 result: parseInt(nilai,10).toString(16)
+            }
+        } else{
+            response = {
+                Message: "Menampilkan Semua",
+                biner:  parseInt(nilai,10).toString(2),
+                octal: parseInt(nilai,10).toString(8),
+                hexadecimal: parseInt(nilai,10).toString(16)
             }
         }
     } else if(a == "octal"){
@@ -69,6 +83,13 @@ app.post("/bilangan/:a/:b/:nilai", (req,res) => {
                 convert: a + " -> " + b,
                 result: parseInt(nilai,8).toString(16)
             }
+        } else{
+            response = {
+                Message: "Menampilkan Semua",
+                biner:  parseInt(nilai,8).toString(2),
+                decimal: parseInt(nilai,8).toString(10),
+                hexadecimal: parseInt(nilai,8).toString(16)
+            }
         }
     } else if(a == "hexadecimal"){
         if(b == "decimal"){
@@ -87,6 +108,13 @@ app.post("/bilangan/:a/:b/:nilai", (req,res) => {
             response = {
                 convert: a + " -> " + b,
                 result: parseInt(nilai,16).toString(2)
+            }
+        } else{
+            response = {
+                Message: "Menampilkan Semua",
+                biner:  parseInt(nilai,16).toString(2),
+                decimal: parseInt(nilai,16).toString(10),
+                octal: parseInt(nilai,16).toString(8)
             }
         }
     }
