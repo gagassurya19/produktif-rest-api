@@ -331,7 +331,7 @@ app.get("/siswa", (req,res) => {
 // end-point akses data siswa berdasarkan id_siswa tertentu
 app.get("/siswa/:id", (req,res) => {
     let data = {
-        id_siswa: res.params.id
+        id_siswa: req.params.id
     }
 
     // Create sql query
