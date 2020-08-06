@@ -4,6 +4,7 @@ const cors = require("cors")
 const app = express()
 const mysql = require("mysql")
 const crypto = require("crypto")
+const moment = require("moment")
 
 app.use(cors())
 app.use(bodyParser.json())
@@ -460,12 +461,36 @@ app.delete("/karyawan/:id", (req,res) => {
 // End-point menampilkan data SEWA
 app.get("/sewa", (req,res) => {
     // Create sql query
-    let sql = "select s.id_sewa, s.id_mobil, s.karyawan, s.pelanggan, s.tgl_sewa, s.tgl_kembali, s.total_bayar,  " +
-            "from sewa p join siswa s on p.id_siswa = s.id_siswa " +
-            "join user u on p.id_user = u.id_user"
+    let sql = "select * " +
+            "from sewa "
     
     // Run query
     db.query(sql, (error,result) => {
+        if(error) {
+            res.json({
+                message: error.message
+            })
+        } else {
+            res.json({
+                count: result.length,
+                sewa: result
+            })
+        }
+    })
+})
+
+// End-point menampilkan data SEWA berdasar id_sewa
+app.get("/sewa/:id", (req,res) => {
+    let data = {
+        id_sewa: req.params.id
+    }
+    
+    // Create sql query
+    let sql = "select * " +
+            "from sewa where ?"
+    
+    // Run query
+    db.query(sql, data, (error,result) => {
         if(error) {
             res.json({
                 message: error.message
@@ -483,14 +508,14 @@ app.get("/sewa", (req,res) => {
 app.post("/sewa", (req,res) => {
     // tampung data input body
     let data = {
-        id_siswa: req.body.id_siswa,
-        id_user: req.body.id_user,
+        id_mobil: req.body.id_mobil,
+        id_pelanggan: req.body.id_pelanggan,
+        id_karyawan: req.body.id_karyawan,
         // Mendapatkan waktu saat input data
-        waktu: moment().format('YYYY-MM-DD HH:mm:ss')
+        tgl_sewa: moment().format('YYYY-MM-DD HH:mm:ss'),
+        tgl_kembali: moment().format('YYYY-MM-DD HH:mm:ss'),
+        total_bayar: req.body.total_bayar
     }
-
-    // Parse ke JSON
-    let pelanggaran = JSON.parse(req.body.pelanggaran)
 
     // Create query insert ke sewa
     let sql = "insert into sewa set ?"
@@ -503,99 +528,71 @@ app.post("/sewa", (req,res) => {
                 message: error.message
             })
         } else {
-            // Get last inserted id_pelanggaran
-            let lastID = result.insertId
-
-            // Prepare data to detaiil_pelanggaran
-            let data = []
-            for(let i = 0; i < pelanggaran.length; i++) {
-                data.push([
-                    lastID, pelanggaran[i].id_pelanggaran
-                ])
-            }
-
-            // Create query insert detail_pelanggaran
-            let sql = "insert into detail_sewa values ?"
-
-            // Run query
-            db.query(sql, [data], (error,result) =>{
-                if(error){
-                    res.json({
-                        message: error.message
-                    })
-                } else {
-                    res.json({
-                        message: "Data has been inserted"
-                    })
-                }
+            res.json({
+                message: "Data has been inserted"
             })
         }
     })
 })
 
-// End-point untuk menampilkan data detail pelanggaran
-app.get("/sewa/:id_sewa", (req,res) => {
-    let param = {
-        id_sewa: req.params.id_sewa
-    }
+// End-point Mengubah data sewa
+app.put("/sewa", (req,res) => {
+    // Tampung data dari body
+    let data = [{
+        id_mobil: req.body.id_mobil,
+        id_pelanggan: req.body.id_pelanggan,
+        id_karyawan: req.body.id_karyawan,
+        // Mendapatkan waktu saat input data
+        tgl_sewa: moment().format('YYYY-MM-DD HH:mm:ss'),
+        tgl_kembali: moment().format('YYYY-MM-DD HH:mm:ss'),
+        total_bayar: req.body.total_bayar
+    },
+    {
+        id_sewa: req.body.id_sewa
+    }]
 
-    // Create sql query
-    let sql = "select p.nama_pelanggaran, p.poin " +
-            "from detail_sewa dps join pelanggaran p " +
-            "on p.id_pelanggaran = dps.id_pelanggaran " +
-            "where ?"
-    
+    // Create sql query update
+    let sql = "update sewa set ? where ?"
+
     // Run query
-    db.query(sql, param, (error,result) => {
-        if(error) {
-            res.json({
+    db.query(sql, data, (error, result) => {
+        let response = null
+        if(error){
+            response = {
                 message: error.message
-            })
+            }
         } else {
-            res.json({
-                count: result.length,
-                detail_sewa: result
-            })
+            response = {
+                message: result.affectedRows + " data Updated"
+            }
         }
+        res.json(response)
     })
 })
 
-// End-point untuk menghapus data sewa
-app.delete("/sewa/:id_sewa", (req,res) => {
-    let param = {
-        id_sewa: req.params.id_sewa
+// End-point menghapus data sewa berdasarkan id_sewa
+app.delete("/sewa/:id", (req,res) => {
+    // Tampung data input dari body
+    let data ={
+        id_sewa: req.params.id
     }
 
-    // Create sql query delete detail_pelanggaran
-    let sql = "delete from detail_sewa where ?"
+    // Create sql query delete
+    let sql = "delete from sewa where ?"
 
-    // Run SQL
-    db.query(sql, param, (error,result) => {
+    // Run query
+    db.query(sql, data, (error,result) => {
+        let response = null
         if(error) {
-            res.json({
+            response = {
                 message: error.message
-            })
-        } else {
-            let param = {
-                id_sewa: req.params.id_sewa
             }
-
-            // Create sql query delete sewa
-            let sql = "delete from sewa where ?"
-
-            // Run SQL
-            db.query(sql, param, (error, result) => {
-                if(error) {
-                    res.json({
-                        message: error.message
-                    })
-                } else {
-                    res.json({
-                        message: "Data has been deleted"
-                    })
-                }
-            })
+        } else {
+            response = {
+                message: result.affectedRows + " Data deleted"
+            }
         }
+        res.json(response)
     })
 })
 // ====================== SEWA ======================
