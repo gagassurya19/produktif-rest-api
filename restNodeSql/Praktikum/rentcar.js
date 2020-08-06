@@ -3,8 +3,10 @@ const bodyParser = require("body-parser")
 const cors = require("cors")
 const app = express()
 const mysql = require("mysql")
-const crypto = require("crypto")
 const moment = require("moment")
+const md5 = require("md5")
+const cryptr = require("cryptr")
+const crypt = new cryptr("19042002")
 
 app.use(cors())
 app.use(bodyParser.json())
@@ -26,9 +28,85 @@ db.connect(error => {
     }
 })
 
+// ====================== TOKEN ======================
+// End-point validasi token (authorization)
+Token = () => {
+    return (req, res, next) => {
+        // Check "TOKEN" pada req header
+        if(!req.get("Token")){
+            // Jika token tidak ada
+            res.json({
+                message: "Access Forbidden"
+            })
+        } else {
+            // Tampung input token from header
+            let token = req.get("Token")
+
+            // Decrypt token menjadi id_user
+            let decryptToken = crypt.decrypt(token)
+
+            // sql query cek id_karyawan
+            let sql = "select * from karyawan where ?"
+
+            // set parameter 
+            let param = {
+                id_karyawan: decryptToken
+            }
+
+            // run query
+            db.query(sql, param, (error, result) => {
+                if(error) throw error
+                // check kebenaran id_karyawan
+                if(result.length > 0){
+                    // id_karyawan tersedia
+                    next()
+                } else {
+                    // jika id_karyawan tidak tersedia
+                    res.json({
+                        message: "Invalid Token"
+                    })
+                }
+            })
+        }
+    }
+}
+
+// End-point login karyawan (authentication/pengenalan)
+app.post("/karyawan/auth", (req, res) => {
+    // Tampung username dan password dari body
+    let param = [
+        req.body.username,
+        md5(req.body.password)
+    ]
+
+    // create sql query
+    let sql = "select * from karyawan where username = ? and password = ?"
+
+    // run query
+    db.query(sql, param, (error, result) => {
+        if(error) throw error
+
+        // check jumlah data hasil query
+        if(result.length > 0) {
+            // user tersedia
+            res.json({
+                message: "Logged",
+                token: crypt.encrypt(result[0].id_karyawan),
+                data: result
+            })
+        } else {
+            // user tidak tersedia
+            res.json({
+                message: "Invalid username/password"
+            })
+        }
+    })
+})
+// ====================== TOKEN ======================
+
 // ====================== MOBIL ======================
 // End-Point akses data mobil
-app.get("/mobil", (req,res) => {
+app.get("/mobil", Token(), (req,res) => {
     // Create sql query
     let sql = "select * from mobil"
 
@@ -51,7 +129,7 @@ app.get("/mobil", (req,res) => {
 })
 
 // end-point akses data mobil berdasarkan id_mobil tertentu
-app.get("/mobil/:id", (req,res) => {
+app.get("/mobil/:id", Token(), (req,res) => {
     let data = {
         id_mobil: req.params.id
     }
@@ -77,7 +155,7 @@ app.get("/mobil/:id", (req,res) => {
 })
 
 // end-point menyimpan data mobil
-app.post("/mobil", (req,res) => {
+app.post("/mobil", Token(), (req,res) => {
     // prepare data
     let data = {
         nomor_mobil: req.body.nomor_mobil,
@@ -109,7 +187,7 @@ app.post("/mobil", (req,res) => {
 })
 
 // end-point mengubah data mobil
-app.put("/mobil", (req,res) => {
+app.put("/mobil", Token(), (req,res) => {
     // prepare data
     let data = [
         {
@@ -147,7 +225,7 @@ app.put("/mobil", (req,res) => {
 })
 
 // End-point menghapus data mobil berdasarkan id_mobil
-app.delete("/mobil/:id", (req,res) => {
+app.delete("/mobil/:id", Token(), (req,res) => {
     // prepare data
     let data = {
         id_mobil: req.params.id
@@ -175,7 +253,7 @@ app.delete("/mobil/:id", (req,res) => {
 
 // ====================== Pelanggan ======================
 // End-Point akses data pelanggan
-app.get("/pelanggan", (req,res) => {
+app.get("/pelanggan", Token(), (req,res) => {
     // Create sql query
     let sql = "select * from pelanggan"
 
@@ -198,7 +276,7 @@ app.get("/pelanggan", (req,res) => {
 })
 
 // end-point akses data pelanggan berdasarkan id_pelanggan tertentu
-app.get("/pelanggan/:id", (req,res) => {
+app.get("/pelanggan/:id", Token(), (req,res) => {
     let data = {
         id_pelanggan: req.params.id
     }
@@ -224,7 +302,7 @@ app.get("/pelanggan/:id", (req,res) => {
 })
 
 // end-point menyimpan data pelanggan
-app.post("/pelanggan", (req,res) => {
+app.post("/pelanggan", Token(), (req,res) => {
     // prepare data
     let data = {
         nama_pelanggan: req.body.nama_pelanggan,
@@ -252,7 +330,7 @@ app.post("/pelanggan", (req,res) => {
 })
 
 // end-point mengubah data pelanggan
-app.put("/pelanggan", (req,res) => {
+app.put("/pelanggan", Token(), (req,res) => {
     // prepare data
     let data = [
         {
@@ -286,7 +364,7 @@ app.put("/pelanggan", (req,res) => {
 })
 
 // End-point menghapus data pelanggan berdasarkan id_pelanggan
-app.delete("/pelanggan/:id", (req,res) => {
+app.delete("/pelanggan/:id", Token(), (req,res) => {
     // prepare data
     let data = {
         id_pelanggan: req.params.id
@@ -314,7 +392,7 @@ app.delete("/pelanggan/:id", (req,res) => {
 
 // ====================== Karyawan ======================
 // End-Point akses data karyawan
-app.get("/karyawan", (req,res) => {
+app.get("/karyawan", Token(), (req,res) => {
     // Create sql query
     let sql = "select * from karyawan"
 
@@ -337,7 +415,7 @@ app.get("/karyawan", (req,res) => {
 })
 
 // end-point akses data karyawan berdasarkan id_karyawan tertentu
-app.get("/karyawan/:id", (req,res) => {
+app.get("/karyawan/:id", Token(), (req,res) => {
     let data = {
         id_karyawan: req.params.id
     }
@@ -363,15 +441,15 @@ app.get("/karyawan/:id", (req,res) => {
 })
 
 // end-point menyimpan data karyawan
-app.post("/karyawan", (req,res) => {
+app.post("/karyawan", Token(), (req,res) => {
     // prepare data
     let data = {
         nama_karyawan: req.body.nama_karyawan,
         alamat_karyawan: req.body.alamat_karyawan,
         kontak: req.body.kontak,
         username: req.body.username,
-        // hash password ke md5 dengan library cryptoJS
-        password: crypto.createHash('md5').update(req.body.password).digest("hex")
+        // hash password ke md5
+        password: md5(req.body.password)
     }
 
     // Create sql query insert
@@ -394,7 +472,7 @@ app.post("/karyawan", (req,res) => {
 })
 
 // end-point mengubah data karyawan
-app.put("/karyawan", (req,res) => {
+app.put("/karyawan", Token(), (req,res) => {
     // prepare data
     let data = [
         {
@@ -402,8 +480,8 @@ app.put("/karyawan", (req,res) => {
             alamat_karyawan: req.body.alamat_karyawan,
             kontak: req.body.kontak,
             username: req.body.username,
-            // hash password ke md5 dengan library cryptoJS
-            password: crypto.createHash('md5').update(req.body.password).digest("hex")
+            // hash password ke md5
+            password: md5(req.body.password)
         },
         // Parameter (primary key)
         {
@@ -431,7 +509,7 @@ app.put("/karyawan", (req,res) => {
 })
 
 // End-point menghapus data karyawan berdasarkan id_karyawan
-app.delete("/karyawan/:id", (req,res) => {
+app.delete("/karyawan/:id", Token(), (req,res) => {
     // prepare data
     let data = {
         id_karyawan: req.params.id
@@ -459,7 +537,7 @@ app.delete("/karyawan/:id", (req,res) => {
 
 // ====================== SEWA ======================
 // End-point menampilkan data SEWA
-app.get("/sewa", (req,res) => {
+app.get("/sewa", Token(), (req,res) => {
     // Create sql query
     let sql = "select * " +
             "from sewa "
@@ -480,7 +558,7 @@ app.get("/sewa", (req,res) => {
 })
 
 // End-point menampilkan data SEWA berdasar id_sewa
-app.get("/sewa/:id", (req,res) => {
+app.get("/sewa/:id", Token(), (req,res) => {
     let data = {
         id_sewa: req.params.id
     }
@@ -505,7 +583,7 @@ app.get("/sewa/:id", (req,res) => {
 })
 
 // End-point menambahkan data SEWA
-app.post("/sewa", (req,res) => {
+app.post("/sewa", Token(), (req,res) => {
     // tampung data input body
     let data = {
         id_mobil: req.body.id_mobil,
@@ -536,7 +614,7 @@ app.post("/sewa", (req,res) => {
 })
 
 // End-point Mengubah data sewa
-app.put("/sewa", (req,res) => {
+app.put("/sewa", Token(), (req,res) => {
     // Tampung data dari body
     let data = [{
         id_mobil: req.body.id_mobil,
@@ -571,7 +649,7 @@ app.put("/sewa", (req,res) => {
 })
 
 // End-point menghapus data sewa berdasarkan id_sewa
-app.delete("/sewa/:id", (req,res) => {
+app.delete("/sewa/:id", Token(), (req,res) => {
     // Tampung data input dari body
     let data ={
         id_sewa: req.params.id
