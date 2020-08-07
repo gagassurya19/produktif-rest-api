@@ -30,6 +30,7 @@ db.connect(error => {
     }
 })
 
+// ================ Auth ================
 // End-point validasi token (authorization/pemberian izin)
 validateToken = () => {
     return (req, res, next) => {
@@ -101,7 +102,9 @@ app.post("/user/auth", (req,res) => {
         }
     })
 })
+// ================ Auth ================
 
+// ================ Data User ================
 // End-point akses data user
 app.get("/user", validateToken(), (req,res) => {
     // Create sql query
@@ -236,7 +239,9 @@ app.delete("/user/:id", validateToken(), (req,res) => {
         res.json(response)
     })
 })
+// ================ Data User ================
 
+// ================ Data Siswa ================
 // End-Point akses data siswa
 app.get("/siswa", validateToken(), (req,res) => {
     // Create sql query
@@ -375,7 +380,9 @@ app.delete("/siswa/:id", validateToken(), (req,res) => {
         res.json(response)
     })
 })
+// ================ Data Siswa ================
 
+// ================ Pelanggaran Siswa ================
 // End-point menampilkan data pelanggaran siswa
 app.get("/pelanggaran_siswa", validateToken(), (req,res) => {
     // Create sql query
@@ -517,6 +524,7 @@ app.delete("/pelanggaran_siswa/:id_pelanggaran_siswa", validateToken(), (req,res
         }
     })
 })
+// ================ Pelanggaran Siswa ================
 
 app.listen(8000, () => {
     console.log("running on port 8000")
