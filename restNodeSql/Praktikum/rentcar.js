@@ -484,17 +484,11 @@ app.post("/sewa", Token(), (req, res) => {
   // run query
   db.query(sqlm, datam, (error, result) => {
 
-    // "[{\"biaya_sewa_per_hari\":980000}]"
-    var string = JSON.stringify(result) // convert rawData -> string
-
-    // "biaya_sewa_per_hari": 980000
-    var json = JSON.parse(string) // convert string rawData -> json
-
     let total
     if(hari != 0) {
-      total =  json[0].biaya_sewa_per_hari * hari
+      total =  result[0].biaya_sewa_per_hari * hari
     } else {
-      total =  json[0].biaya_sewa_per_hari
+      total =  result[0].biaya_sewa_per_hari
     }
     
     let data = {
@@ -537,22 +531,22 @@ app.get("/detail_sewa", Token(), (req,res) => {
   })
 })
 
-app.get("/detail_sewa/:id", (req,res) => {
+// End-point detail dengan id_sewa
+app.get("/detail_sewa/:id", Token(), (req,res) => {
   // sql query
   let sql = "SELECT s.id_sewa, s.tgl_sewa, s.tgl_kembali, s.total_bayar, " +
   "m.id_mobil, m.nomor_mobil, m.merk, p.id_pelanggan, p.nama_pelanggan, " +
   "k.id_karyawan, k.nama_karyawan " + 
   "FROM sewa s JOIN mobil m ON s.id_mobil = m.id_mobil " +
   "JOIN pelanggan p ON s.id_pelanggan = p.id_pelanggan " + 
-  "JOIN karyawan k ON s.id_karyawan = k.id_karyawan"
+  "JOIN karyawan k ON s.id_karyawan = k.id_karyawan " +
+  "WHERE id_sewa = ?"
 
-  // tampung id, agar mudah mencari saya pakai id_pelanggan
-  let id = {
-    id_pelanggan: req.params.id
-  }
+  // tampung id_sewa
+  let id = req.params.id
 
   // run query
-  db.query(sql, (error,result) => {
+  db.query(sql, id, (error,result) => {
     errFun(error,result)
     res.json(response)
   })

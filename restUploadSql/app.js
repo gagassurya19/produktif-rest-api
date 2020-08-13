@@ -1,5 +1,4 @@
 const express = require("express")
-const app = express()
 const multer = require("multer") // untuk upload file
 const path = require("path") // untuk memanggil path direktori
 const fs = require("fs") // untuk manajemen file
@@ -13,6 +12,7 @@ const cryptr = require("cryptr")
 const crypt = new cryptr("19042002")
 
 // panggil library
+const app = express()
 app.use(express.static(__dirname))
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
@@ -26,10 +26,28 @@ const db = mysql.createConnection({
     database: "olshop"
 })
 
+// Check connection
 db.connect(err => {
     if(err) throw console.log(err.message)
     console.log("Mysql Connected")
 })
+
+// Run server
+app.listen(8000, () => {
+    console.log("Running on 8000")
+})
+
+// Utility
+// Error Function
+let response
+errFun = (error, result) => {
+    if(!result){
+        if(error) throw response = {message: error.message}
+    } else {
+        if(error) throw response = {message: error.message}
+        response = {count: result.length, data: result}
+    }
+}
 
 // variable konfigurasi proses upload file
 const storage = multer.diskStorage({
@@ -68,10 +86,11 @@ app.post("/barang", upload.single("image"), (req,res) => {
 
         // run query
         db.query(sql, data, (error, result) => {
-            if(error) throw error
-            res.json({
+            errFun(error)
+            response = {
                 message: result.affectedRows + " Data berhasi disimpan"
-            })
+            }
+            res.json(response)
         })
     }
 })
@@ -123,15 +142,11 @@ app.put("/barang", upload.single("image"), (req, res) => {
 
     // run sql update
     db.query(sql, [data, param], (error, result) => {
-        if(error) {
-            res.json({
-                message: error.message
-            })
-        } else {
-            res.json({
-                message: result.affectedRows + " Data berhasil diubah"
-            })
+        errFun(error,result)
+        response = {
+            message: result.affectedRows + " Data berhasil diubah"
         }
+        res.json(response)
     })
 })
 
@@ -161,15 +176,11 @@ app.delete("/barang/:kode_barang", (req, res) => {
 
     // run query
     db.query(sql, param, (error, result) => {
-        if(error) {
-            res.json({
-                message: error.message
-            })
-        } else {
-            res.json({
-                message: result.affectedRows + " Data berhasil dihapus"
-            })
+        errFun(error,result)
+        response = {
+            message: result.affectedRows + " Data berhasil dihapus"
         }
+        res.json(response)
     })
 }) 
 
@@ -180,11 +191,8 @@ app.get("/barang", (req, res) => {
 
     // run query
     db.query(sql, (error, result) => {
-        if(error) throw error
-        res.json({
-            count: result.length,
-            data: result
-        })
+        errFun(error, result)
+        res.json(response)
     })
 })
 // ================ Barang ================
@@ -197,11 +205,7 @@ app.get("/admin", (req, res) => {
 
     // run query
     db.query(sql, (error, result) => {
-        if(error) throw error
-        res.json({
-            count: result.length,
-            data: result
-        })
+        errFun(error,result)
     })
 })
 
@@ -219,10 +223,11 @@ app.post("/admin", (req, res) => {
 
     // run query
     db.query(sql, data, (error, result) => {
-        if(error) throw error
-        res.json({
+        errFun(error,result)
+        response = {
             message: result.affectedRows + " Data tersimpan"
-        })
+        }
+        res.json(response)
     })
 })
 
@@ -243,10 +248,11 @@ app.put("/admin", (req, res) => {
 
     // run query
     db.query(sql, data, (error, result) => {
-        if(error) throw error
-        res.json({
+        errFun(error,result)
+        response = {
             message: result.affectedRows + " Data update"
-        })
+        }
+        res.json(response)
     })
 })
 
@@ -262,10 +268,11 @@ app.delete("/admin/:id_admin", (req, res) => {
 
     // run query
     db.query(sql, data, (error, result) => {
-        if(error) throw error
-        res.json({
+        errFun(error)
+        response = {
             message: result.affectedRows + " Data terhapus"
-        })
+        }
+        res.json(response)
     })
 })
 // ================ Admin ================
@@ -308,10 +315,11 @@ app.post("/users", upload.single("image"), (req, res) => {
 
         // run query
         db.query(sql, data, (error, result) => {
-            if(error) throw error
-            res.json({
+            errFun(error)
+            response = {
                 message: result.affectedRows + " Data disimpan"
-            })
+            }
+            res.json(response)
         })
     }
 })
@@ -363,10 +371,11 @@ app.put("/users", upload.single("image"), (req, res) => {
     
     // run sql update
     db.query(sql, [data, param], (error, result) => {
-        if(error) throw error
-        res.json({
+        errFun(error)
+        response = {
             message: result.affectedRows + " Data berhasil diubah"
-        })
+        }
+        res.json(response)
     })
 })
 
@@ -397,10 +406,11 @@ app.delete("/users/:id_users", (req, res) => {
 
     // run query
     db.query(sql, param, (error, result) => {
-        if(error) throw error
-        res.json({
+        errFun(error)
+        response = {
             message: result.affectedRows + " Data berhasil dihapus"
-        })
+        }
+        res.json(response)
     })
 })
 // ================ Users ================
@@ -412,29 +422,88 @@ app.get("/transaksi", (req, res) => {
     let sql = "select * from transaksi"
 
     // run query
-    db.query(sql, (err, result) => {
-        if(err) throw err
-        res.json({
-            count: result.length,
-            data: result
-        })
+    db.query(sql, (error, result) => {
+        errFun(error,result)
+        res.json(response)
     })
 })
 
 // End-poin tambah data transaksi
 app.post("/transaksi", (req,res) => {
-    // tampung input
-    let data = {
-        id_users: req.body.id_users,
+    let data1 = {
+        id_user: req.body.id_user, // input
         tgl_transaksi: moment().format('YYYY-MM-DD HH:mm:ss')
     }
 
-    let sql = "insert into transaksi"
+    let sql1 = "insert into transaksi set ?"
+
+    db.query(sql1, data1, (error,result) => {
+        let data2 = {
+            id_user: req.body.id_user
+        }
+
+        let sql2 = "select * from transaksi where ?"
+
+        db.query(sql2, data2, (error, result) => {
+            // tampung input
+            let kode_transaksi = result[0].kode_transaksi
+
+            let data3 = {
+                kode_barang: req.body.kode_barang // input
+            }
+
+            let sql3 = "select * from barang where ?"
+
+            db.query(sql3, data3, (error, result) => {
+                let harga = result[0].harga
+                let jumlah = req.body.jumlah
+                let total = harga * jumlah
+
+                let data4 = {
+                    kode_transaksi: kode_transaksi,
+                    kode_barang: result[0].kode_barang,
+                    jumlah: jumlah, // input
+                    harga_beli: total
+                }
+
+                let sql4 = "insert into detail_transaksi set ?"
+
+                db.query(sql4, data4,(error, result) => {
+                    errFun(error)
+                    res.json({message: result.affectedRows + " Data inserted"})
+                })
+            })
+        })
+    })
+})
+
+// End-point tampilin detail transaksi
+app.get("/detail_transaksi", (req,res) => {
+    // sql query
+    let sql = "SELECT t.kode_transaksi, t.id_user, t.tgl_transaksi, " + 
+    "d.kode_barang, b.nama_barang, d.jumlah, d.harga_beli " + 
+    "FROM transaksi t JOIN detail_transaksi d ON t.kode_transaksi = d.kode_transaksi " + 
+    "JOIN barang b ON d.kode_barang = b.kode_barang "
+
+    db.query(sql, (error, result) => {
+        errFun(error,result)
+        res.json(response)
+    })
+})
+
+// End-point tampilin detail transaksi berdasar id_user
+app.get("/detail_transaksi/:id", (req,res) => {
+    let id = req.params.id
+    // sql query
+    let sql = "SELECT t.kode_transaksi, t.id_user, t.tgl_transaksi, " + 
+    "d.kode_barang, b.nama_barang, d.jumlah, d.harga_beli " + 
+    "FROM transaksi t JOIN detail_transaksi d ON t.kode_transaksi = d.kode_transaksi " + 
+    "JOIN barang b ON d.kode_barang = b.kode_barang " +
+    "WHERE id_user = ?"
+
+    db.query(sql, id, (error, result) => {
+        errFun(error,result)
+        res.json(response)
+    })
 })
 // ================ Transaksi ================
-
-
-// Run server
-app.listen(8000, () => {
-    console.log("Running 8000")
-})
