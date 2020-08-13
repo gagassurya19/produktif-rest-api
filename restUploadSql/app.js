@@ -5,16 +5,31 @@ const path = require("path") // untuk memanggil path direktori
 const fs = require("fs") // untuk manajemen file
 const cors = require("cors")
 const mysql = require("mysql")
+const moment = require("moment")
 
 // hash cryptr
 const md5 = require("md5")
 const cryptr = require("cryptr")
 const crypt = new cryptr("19042002")
 
+// panggil library
 app.use(express.static(__dirname))
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 app.use(cors())
+
+// variable konfigurasi koneksi database
+const db = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "",
+    database: "olshop"
+})
+
+db.connect(err => {
+    if(err) throw console.log(err.message)
+    console.log("Mysql Connected")
+})
 
 // variable konfigurasi proses upload file
 const storage = multer.diskStorage({
@@ -29,14 +44,6 @@ const storage = multer.diskStorage({
 })
 
 let upload = multer({storage: storage})
-
-// variable konfigurasi koneksi database
-const db = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "olshop"
-})
 
 // ================ Barang ================
 // End-point menambah data barang (insert)
@@ -399,7 +406,31 @@ app.delete("/users/:id_users", (req, res) => {
 // ================ Users ================
 
 // ================ Transaksi ================
+// End-point tampilkan data Transaksi
+app.get("/transaksi", (req, res) => {
+    // query select
+    let sql = "select * from transaksi"
 
+    // run query
+    db.query(sql, (err, result) => {
+        if(err) throw err
+        res.json({
+            count: result.length,
+            data: result
+        })
+    })
+})
+
+// End-poin tambah data transaksi
+app.post("/transaksi", (req,res) => {
+    // tampung input
+    let data = {
+        id_users: req.body.id_users,
+        tgl_transaksi: moment().format('YYYY-MM-DD HH:mm:ss')
+    }
+
+    let sql = "insert into transaksi"
+})
 // ================ Transaksi ================
 
 

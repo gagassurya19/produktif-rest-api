@@ -1,32 +1,50 @@
+// import library
 const express = require("express")
 const bodyParser = require("body-parser")
 const cors = require("cors")
-const app = express()
 const mysql = require("mysql")
 const moment = require("moment")
 const md5 = require("md5")
 const cryptr = require("cryptr")
 const crypt = new cryptr("19042002")
 
+// call library
+const app = express()
 app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended:true}))
 
-// Create mysql connection
+// mysql connection
 var db = mysql.createConnection({
     host: "localhost",
+    // port: 8888,
     user: "root",
     password: "",
     database: "rent_car"
 })
 
-db.connect(error => {
-    if(error){
-        console.log(error.message)
-    } else {
-        console.log("Mysql Connected")
-    }
+// check connection
+db.connect(err => {
+    if(err) throw console.log(error.message)
+    console.log("Mysql Connected")
 })
+
+// run server
+app.listen(8000, () => {
+    console.log("running on port 8000")
+});
+
+// Utility
+// Function Error, Result
+let response = null
+errFun = (error, result) => {
+  if(!result){
+    if(error) throw response = {message: error.message}
+  } else {
+    if(error) throw response = {message: error.message}
+    response = {count: result.length, data: result}
+  }
+}
 
 // ====================== TOKEN ======================
 // End-point validasi token (authorization)
@@ -112,18 +130,7 @@ app.get("/mobil", Token(), (req,res) => {
 
     // run query
     db.query(sql, (error, result) => {
-        let response = null
-        if(error) {
-            response = {
-                message: error.message // pesan error
-            }
-        } else {
-            response = {
-                jumlah: result.length, // jumlah data
-                mobil: result // isi data
-            }
-        }
-
+        errFun(error,result)
         res.json(response)
     })
 })
@@ -139,17 +146,7 @@ app.get("/mobil/:id", Token(), (req,res) => {
 
     // run query
     db.query(sql, data, (error, result) => {
-        let response = null
-        if(error) {
-            response = {
-                message: error.message // pesan error
-            }
-        } else {
-            response = {
-                jumlah: result.length, // jumlah data
-                mobil: result // isi data
-            }
-        }
+        errFun(error, result)
         res.json(response) // send response
     })
 })
@@ -172,15 +169,9 @@ app.post("/mobil", Token(), (req,res) => {
 
     // Run query
     db.query(sql, data, (error,result) => {
-        let response = null
-        if(error) {
-            response = {
-                message: error.message // pesan error
-            }
-        } else {
-            response = {
-                message: result.affectedRows + " data inserted"
-            }
+        errFun(error)
+        response = {
+          message: result.affectedRows + " data inserted"
         }
         res.json(response) // send response
     })
@@ -210,15 +201,9 @@ app.put("/mobil", Token(), (req,res) => {
 
     // run query
     db.query(sql, data, (error,result) => {
-        let response = null
-        if(error) {
-            response = {
-                message: error.message // pesan error
-            }
-        } else {
-            response = {
-                message: result.affectedRows + " data updated"
-            }
+        errFun(error)
+        response = {
+          message: result.affectedRows + " Data Updated"
         }
         res.json(response)
     })
@@ -236,15 +221,9 @@ app.delete("/mobil/:id", Token(), (req,res) => {
 
     // run query
     connection.query(sql, data, (error,result) => {
-        let response = null
-        if(error){
-            response = {
-                message: error.message
-            }
-        } else {
-            response = {
-                message: result.affectedRows + " data deleted"
-            }
+        errFun(error)
+        response = {
+          message: result.affectedRows + " Data deleted"
         }
         res.json(response)
     })
@@ -259,18 +238,7 @@ app.get("/pelanggan", Token(), (req,res) => {
 
     // run query
     db.query(sql, (error, result) => {
-        let response = null
-        if(error) {
-            response = {
-                message: error.message // pesan error
-            }
-        } else {
-            response = {
-                jumlah: result.length, // jumlah data
-                pelanggan: result // isi data
-            }
-        }
-
+        errFun(error,result)
         res.json(response)
     })
 })
@@ -287,16 +255,7 @@ app.get("/pelanggan/:id", Token(), (req,res) => {
     // run query
     db.query(sql, data, (error, result) => {
         let response = null
-        if(error) {
-            response = {
-                message: error.message // pesan error
-            }
-        } else {
-            response = {
-                jumlah: result.length, // jumlah data
-                pelanggan: result // isi data
-            }
-        }
+        errFun(error,result)
         res.json(response) // send response
     })
 })
@@ -315,15 +274,9 @@ app.post("/pelanggan", Token(), (req,res) => {
 
     // Run query
     db.query(sql, data, (error,result) => {
-        let response = null
-        if(error) {
-            response = {
-                message: error.message // pesan error
-            }
-        } else {
-            response = {
-                message: result.affectedRows + " data inserted"
-            }
+        errFun(error)
+        response = {
+          message: result.affectedRows + " Data Inserted"
         }
         res.json(response) // send response
     })
@@ -349,15 +302,9 @@ app.put("/pelanggan", Token(), (req,res) => {
 
     // run query
     db.query(sql, data, (error,result) => {
-        let response = null
-        if(error) {
-            response = {
-                message: error.message // pesan error
-            }
-        } else {
-            response = {
-                message: result.affectedRows + " data updated"
-            }
+        errFun(error)
+        response = {
+          message: result.affectedRows + " Data updated"
         }
         res.json(response)
     })
@@ -375,15 +322,9 @@ app.delete("/pelanggan/:id", Token(), (req,res) => {
 
     // run query
     db.query(sql, data, (error,result) => {
-        let response = null
-        if(error){
-            response = {
-                message: error.message
-            }
-        } else {
-            response = {
-                message: result.affectedRows + " data deleted"
-            }
+        errFun(error)
+        response = {
+          message: result.affectedRows + " Data deleted"
         }
         res.json(response)
     })
@@ -398,18 +339,7 @@ app.get("/karyawan", Token(), (req,res) => {
 
     // run query
     db.query(sql, (error, result) => {
-        let response = null
-        if(error) {
-            response = {
-                message: error.message // pesan error
-            }
-        } else {
-            response = {
-                jumlah: result.length, // jumlah data
-                karyawan: result // isi data
-            }
-        }
-
+        errFun(error, result)
         res.json(response)
     })
 })
@@ -425,17 +355,7 @@ app.get("/karyawan/:id", Token(), (req,res) => {
 
     // run query
     db.query(sql, data, (error, result) => {
-        let response = null
-        if(error) {
-            response = {
-                message: error.message // pesan error
-            }
-        } else {
-            response = {
-                jumlah: result.length, // jumlah data
-                karyawan: result // isi data
-            }
-        }
+        errFun(error,result)
         res.json(response) // send response
     })
 })
@@ -448,8 +368,7 @@ app.post("/karyawan", Token(), (req,res) => {
         alamat_karyawan: req.body.alamat_karyawan,
         kontak: req.body.kontak,
         username: req.body.username,
-        // hash password ke md5
-        password: md5(req.body.password)
+        password: md5(req.body.password) // hash password ke md5
     }
 
     // Create sql query insert
@@ -457,16 +376,10 @@ app.post("/karyawan", Token(), (req,res) => {
 
     // Run query
     db.query(sql, data, (error,result) => {
-        let response = null
-        if(error) {
-            response = {
-                message: error.message // pesan error
-            }
-        } else {
-            response = {
-                message: result.affectedRows + " data inserted"
-            }
-        }
+        errFun(error)
+          response = {
+              message: result.affectedRows + " data inserted"
+          }
         res.json(response) // send response
     })
 })
@@ -480,8 +393,7 @@ app.put("/karyawan", Token(), (req,res) => {
             alamat_karyawan: req.body.alamat_karyawan,
             kontak: req.body.kontak,
             username: req.body.username,
-            // hash password ke md5
-            password: md5(req.body.password)
+            password: md5(req.body.password) // hash password ke md5
         },
         // Parameter (primary key)
         {
@@ -494,16 +406,10 @@ app.put("/karyawan", Token(), (req,res) => {
 
     // run query
     db.query(sql, data, (error,result) => {
-        let response = null
-        if(error) {
-            response = {
-                message: error.message // pesan error
-            }
-        } else {
-            response = {
-                message: result.affectedRows + " data updated"
-            }
-        }
+        errFun(error)
+          response = {
+              message: result.affectedRows + " data updated"
+          }
         res.json(response)
     })
 })
@@ -520,16 +426,10 @@ app.delete("/karyawan/:id", Token(), (req,res) => {
 
     // run query
     db.query(sql, data, (error,result) => {
-        let response = null
-        if(error){
-            response = {
-                message: error.message
-            }
-        } else {
-            response = {
-                message: result.affectedRows + " data deleted"
-            }
-        }
+        errFun(error)
+          response = {
+              message: result.affectedRows + " data deleted"
+          }
         res.json(response)
     })
 })
@@ -539,111 +439,11 @@ app.delete("/karyawan/:id", Token(), (req,res) => {
 // End-point menampilkan data SEWA
 app.get("/sewa", Token(), (req,res) => {
     // Create sql query
-    let sql = "select * " +
-            "from sewa "
+    let sql = "select * from sewa"
     
     // Run query
     db.query(sql, (error,result) => {
-        if(error) {
-            res.json({
-                message: error.message
-            })
-        } else {
-            res.json({
-                count: result.length,
-                sewa: result
-            })
-        }
-    })
-})
-
-// End-point menampilkan data SEWA berdasar id_sewa
-app.get("/sewa/:id", Token(), (req,res) => {
-    let data = {
-        id_sewa: req.params.id
-    }
-    
-    // Create sql query
-    let sql = "select * " +
-            "from sewa where ?"
-    
-    // Run query
-    db.query(sql, data, (error,result) => {
-        if(error) {
-            res.json({
-                message: error.message
-            })
-        } else {
-            res.json({
-                count: result.length,
-                sewa: result
-            })
-        }
-    })
-})
-
-// End-point menambahkan data SEWA
-app.post("/sewa", Token(), (req,res) => {
-    // tampung data input body
-    let data = {
-        id_mobil: req.body.id_mobil,
-        id_pelanggan: req.body.id_pelanggan,
-        id_karyawan: req.body.id_karyawan,
-        // Mendapatkan waktu saat input data
-        tgl_sewa: moment().format('YYYY-MM-DD HH:mm:ss'),
-        tgl_kembali: moment().format('YYYY-MM-DD HH:mm:ss'),
-        total_bayar: req.body.total_bayar
-    }
-
-    // Create query insert ke sewa
-    let sql = "insert into sewa set ?"
-
-    // Run query
-    db.query(sql, data, (error,result) => {
-        // let response = null // karena tidak dipakai saya "comment"
-        if(error){
-            res.json({
-                message: error.message
-            })
-        } else {
-            res.json({
-                message: "Data has been inserted"
-            })
-        }
-    })
-})
-
-// End-point Mengubah data sewa
-app.put("/sewa", Token(), (req,res) => {
-    // Tampung data dari body
-    let data = [{
-        id_mobil: req.body.id_mobil,
-        id_pelanggan: req.body.id_pelanggan,
-        id_karyawan: req.body.id_karyawan,
-        // Mendapatkan waktu saat input data
-        tgl_sewa: moment().format('YYYY-MM-DD HH:mm:ss'),
-        tgl_kembali: moment().format('YYYY-MM-DD HH:mm:ss'),
-        total_bayar: req.body.total_bayar
-    },
-    {
-        id_sewa: req.body.id_sewa
-    }]
-
-    // Create sql query update
-    let sql = "update sewa set ? where ?"
-
-    // Run query
-    db.query(sql, data, (error, result) => {
-        let response = null
-        if(error){
-            response = {
-                message: error.message
-            }
-        } else {
-            response = {
-                message: result.affectedRows + " data Updated"
-            }
-        }
+        errFun(error,result)
         res.json(response)
     })
 })
@@ -651,29 +451,111 @@ app.put("/sewa", Token(), (req,res) => {
 // End-point menghapus data sewa berdasarkan id_sewa
 app.delete("/sewa/:id", Token(), (req,res) => {
     // Tampung data input dari body
-    let data ={
-        id_sewa: req.params.id
-    }
+    let data = {id_sewa: req.params.id}
 
     // Create sql query delete
     let sql = "delete from sewa where ?"
 
     // Run query
     db.query(sql, data, (error,result) => {
-        let response = null
-        if(error) {
-            response = {
-                message: error.message
-            }
-        } else {
-            response = {
-                message: result.affectedRows + " Data deleted"
-            }
-        }
-        res.json(response)
+      errFun(error)
+          response = {
+              message: result.affectedRows + " Data deleted"
+          }
+      res.json(response)
     })
 })
+
+// End-point input sewa
+app.post("/sewa", Token(), (req, res) => {
+  // input data hari (tahun, bulan, hari) with momentJS
+  const sewa = moment(req.body.tgl_sewa) 
+  const balik = moment(req.body.tgl_kembali)
+  const hari = balik.diff(sewa, 'days')
+
+  // tampung id_mobil
+  let datam = {
+    id_mobil: req.body.id_mobil
+  }
+
+  // query biaya sewa
+  let sqlm = "select biaya_sewa_per_hari from mobil where ?"
+
+  // run query
+  db.query(sqlm, datam, (error, result) => {
+
+    // "[{\"biaya_sewa_per_hari\":980000}]"
+    var string = JSON.stringify(result) // convert rawData -> string
+
+    // "biaya_sewa_per_hari": 980000
+    var json = JSON.parse(string) // convert string rawData -> json
+
+    let total
+    if(hari != 0) {
+      total =  json[0].biaya_sewa_per_hari * hari
+    } else {
+      total =  json[0].biaya_sewa_per_hari
+    }
+    
+    let data = {
+      id_mobil: req.body.id_mobil,
+      id_karyawan: req.body.id_karyawan,
+      id_pelanggan: req.body.id_pelanggan,
+      tgl_sewa: req.body.tgl_sewa,
+      tgl_kembali: req.body.tgl_kembali,
+      total_bayar: total
+    }
+
+    let sql = "insert into sewa set ?"
+
+    db.query(sql, data, (error, result) => {
+      errFun(error)
+      response = {
+        message: result.affectedRows + " Data inserted"
+      }
+      res.json(response)
+    })
+  })
+})
 // ====================== SEWA ======================
-app.listen(8000, () => {
-    console.log("running on port 8000")
-});
+
+// ====================== DETAIL SEWA ======================
+// End-point detail sewa
+app.get("/detail_sewa", Token(), (req,res) => {
+  // sql query
+  let sql = "SELECT s.id_sewa, s.tgl_sewa, s.tgl_kembali, s.total_bayar, " +
+  "m.id_mobil, m.nomor_mobil,m.merk, p.id_pelanggan, p.nama_pelanggan, " +
+  "k.id_karyawan, k.nama_karyawan " + 
+  "FROM sewa s JOIN mobil m ON s.id_mobil = m.id_mobil " +
+  "JOIN pelanggan p ON s.id_pelanggan = p.id_pelanggan " + 
+  "JOIN karyawan k ON s.id_karyawan = k.id_karyawan"
+
+  // run query
+  db.query(sql, (error,result) => {
+    errFun(error,result)
+    res.json(response)
+  })
+})
+
+app.get("/detail_sewa/:id", (req,res) => {
+  // sql query
+  let sql = "SELECT s.id_sewa, s.tgl_sewa, s.tgl_kembali, s.total_bayar, " +
+  "m.id_mobil, m.nomor_mobil, m.merk, p.id_pelanggan, p.nama_pelanggan, " +
+  "k.id_karyawan, k.nama_karyawan " + 
+  "FROM sewa s JOIN mobil m ON s.id_mobil = m.id_mobil " +
+  "JOIN pelanggan p ON s.id_pelanggan = p.id_pelanggan " + 
+  "JOIN karyawan k ON s.id_karyawan = k.id_karyawan"
+
+  // tampung id, agar mudah mencari saya pakai id_pelanggan
+  let id = {
+    id_pelanggan: req.params.id
+  }
+
+  // run query
+  db.query(sql, (error,result) => {
+    errFun(error,result)
+    res.json(response)
+  })
+})
+// ====================== DETAIL SEWA ======================
+
