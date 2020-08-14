@@ -49,6 +49,62 @@ errFun = (error, result) => {
     }
 }
 
+// TOKEN
+Token = () => {
+    return (req, res, next) => {
+        // check token di request header
+        if(!req.get("Token")) {
+            res.json({
+                message: "Access Forbidden"
+            })
+        } else {
+            let token = req.get("Token") // tampung inputan token
+            let decToken = crypt.decrypt(token) // convert md5 ke text id_admin
+            let sql = "select * from admin where id_admin = ?"
+            let param = [decToken]
+            // run query
+            db.query(sql, param, (error, result) => {
+                if(error) throw error
+                if(result.length > 0){
+                    next() // FUNGSI INI BUAT APA PAK ?
+                } else {
+                    rsult.json({
+                        message: "Invalid Token"
+                    })
+                }
+            })
+        }
+    }
+} 
+
+// End-point authentication
+app.post("/admin/auth", (req, res) => {
+    let param = [
+        req.body.username,
+        md5(req.body.password)
+    ]
+
+    let sql = "SELECT * from admin where username = ? and password = ?"
+
+    // run query
+    db.query(sql, param, (error, result) => {
+        if(error) throw error.message
+        if(result.length > 0){
+            // jika user ada
+            res.json({
+                message: "Logged",
+                token: crypt.encrypt(result[0].id_admin), // convert id_admin to md5
+                data: result
+            })
+        } else {
+            // jika user ga ada
+            res.json({
+                message: "Invalid username/password"
+            })
+        }
+    })
+})
+
 // variable konfigurasi proses upload file
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -65,7 +121,7 @@ let upload = multer({storage: storage})
 
 // ================ Barang ================
 // End-point menambah data barang (insert)
-app.post("/barang", upload.single("image"), (req,res) => {
+app.post("/barang", Token(), upload.single("image"), (req,res) => {
     // tampung data input dari body
     let data = {
         nama_barang: req.body.nama_barang,
@@ -96,7 +152,7 @@ app.post("/barang", upload.single("image"), (req,res) => {
 })
 
 // End-point mengubah data barang (update)
-app.put("/barang", upload.single("image"), (req, res) => {
+app.put("/barang", Token(), upload.single("image"), (req, res) => {
     let data = null, sql = null;
     // parameter perubahan data
     let param = {
@@ -151,7 +207,7 @@ app.put("/barang", upload.single("image"), (req, res) => {
 })
 
 // End-point untuk menghapus data barang berdasarkan "kode_barang" (delete)
-app.delete("/barang/:kode_barang", (req, res) => {
+app.delete("/barang/:kode_barang", Token(), (req, res) => {
     let param = {
         kode_barang: req.params.kode_barang
     }
@@ -185,7 +241,7 @@ app.delete("/barang/:kode_barang", (req, res) => {
 }) 
 
 // End-point tampilkan data barang
-app.get("/barang", (req, res) => {
+app.get("/barang", Token(), (req, res) => {
     // create sql query
     let sql = "select * from barang"
 
@@ -199,18 +255,19 @@ app.get("/barang", (req, res) => {
 
 // ================ Admin ================
 // End-point tampilkan data admin (select)
-app.get("/admin", (req, res) => {
+app.get("/admin", Token(), (req, res) => {
     // Create sql query
     let sql = "select * from admin"
 
     // run query
     db.query(sql, (error, result) => {
         errFun(error,result)
+        res.json(response)
     })
 })
 
 // End-point tambah data admin (insert)
-app.post("/admin", (req, res) => {
+app.post("/admin", Token(), (req, res) => {
     // tampung input dari body
     let data = {
         nama_admin: req.body.nama_admin,
@@ -232,7 +289,7 @@ app.post("/admin", (req, res) => {
 })
 
 // End-point edit data admin (update)
-app.put("/admin", (req, res) => {
+app.put("/admin", Token(), (req, res) => {
     // tampung data input body
     let data = [{
         nama_admin: req.body.nama_admin,
@@ -257,7 +314,7 @@ app.put("/admin", (req, res) => {
 })
 
 // End-point hapus data admin (delete)
-app.delete("/admin/:id_admin", (req, res) => {
+app.delete("/admin/:id_admin", Token(), (req, res) => {
     // tampung data params
     let data = {
         id_admin: req.params.id_admin
@@ -279,7 +336,7 @@ app.delete("/admin/:id_admin", (req, res) => {
 
 // ================ Users ================
 // End-point tampilkan data users (select)
-app.get("/users", (req, res) => {
+app.get("/users", Token(), (req, res) => {
     // query select
     let sql = "select * from users"
 
@@ -294,7 +351,7 @@ app.get("/users", (req, res) => {
 })
 
 // End-point tambahkan data users (insert)
-app.post("/users", upload.single("image"), (req, res) => {
+app.post("/users", Token(), upload.single("image"), (req, res) => {
     // tampung data input dari body
     let data = {
         nama_users: req.body.nama_users,
@@ -325,7 +382,7 @@ app.post("/users", upload.single("image"), (req, res) => {
 })
 
 // End-point ubah data users (update)
-app.put("/users", upload.single("image"), (req, res) => {
+app.put("/users", Token(), upload.single("image"), (req, res) => {
     let data = null, sql = null
     // parameter perubahan data
     let param = {
@@ -380,7 +437,7 @@ app.put("/users", upload.single("image"), (req, res) => {
 })
 
 // End-point untuk hapus data users berdasarkan "id_users" (delete)
-app.delete("/users/:id_users", (req, res) => {
+app.delete("/users/:id_users", Token(), (req, res) => {
     // tampung data params
     let param = {
         id_users: req.params.id_users
@@ -417,7 +474,7 @@ app.delete("/users/:id_users", (req, res) => {
 
 // ================ Transaksi ================
 // End-point tampilkan data Transaksi
-app.get("/transaksi", (req, res) => {
+app.get("/transaksi", Token(), (req, res) => {
     // query select
     let sql = "select * from transaksi"
 
@@ -429,7 +486,7 @@ app.get("/transaksi", (req, res) => {
 })
 
 // End-poin tambah data transaksi
-app.post("/transaksi", (req,res) => {
+app.post("/transaksi", Token(), (req,res) => {
     let data1 = {
         id_user: req.body.id_user, // input
         tgl_transaksi: moment().format('YYYY-MM-DD HH:mm:ss')
@@ -478,7 +535,7 @@ app.post("/transaksi", (req,res) => {
 })
 
 // End-point tampilin detail transaksi
-app.get("/detail_transaksi", (req,res) => {
+app.get("/detail_transaksi", Token(), (req,res) => {
     // sql query
     let sql = "SELECT t.kode_transaksi, t.id_user, t.tgl_transaksi, " + 
     "d.kode_barang, b.nama_barang, d.jumlah, d.harga_beli " + 
@@ -492,7 +549,7 @@ app.get("/detail_transaksi", (req,res) => {
 })
 
 // End-point tampilin detail transaksi berdasar id_user
-app.get("/detail_transaksi/:id", (req,res) => {
+app.get("/detail_transaksi/:id", Token(), (req,res) => {
     let id = req.params.id
     // sql query
     let sql = "SELECT t.kode_transaksi, t.id_user, t.tgl_transaksi, " + 
