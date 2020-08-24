@@ -49,34 +49,6 @@ errFun = (error, result) => {
     }
 }
 
-// TOKEN
-Token = () => {
-    return (req, res, next) => {
-        // check token di request header
-        if(!req.get("Token")) {
-            res.json({
-                message: "Access Forbidden"
-            })
-        } else {
-            let token = req.get("Token") // tampung inputan token
-            let decToken = crypt.decrypt(token) // convert md5 ke text id_admin
-            let sql = "select * from admin where id_admin = ?"
-            let param = [decToken]
-            // run query
-            db.query(sql, param, (error, result) => {
-                if(error) throw error
-                if(result.length > 0){
-                    next() // FUNGSI INI BUAT APA PAK ?
-                } else {
-                    rsult.json({
-                        message: "Invalid Token"
-                    })
-                }
-            })
-        }
-    }
-} 
-
 // End-point authentication
 app.post("/admin/auth", (req, res) => {
     let param = [
@@ -564,3 +536,31 @@ app.get("/detail_transaksi/:id", Token(), (req,res) => {
     })
 })
 // ================ Transaksi ================
+
+// TOKEN
+Token = () => {
+    return (req, res, next) => {
+        // check token di request header
+        if(!req.get("Token")) {
+            res.json({
+                message: "Access Forbidden"
+            })
+        } else {
+            let token = req.get("Token") // tampung inputan token
+            let decToken = crypt.decrypt(token) // convert md5 ke text id_admin
+            let sql = "select * from admin where id_admin = ?"
+            let param = [decToken]
+            // run query
+            db.query(sql, param, (error, result) => {
+                if(error) throw error
+                if(result.length > 0){
+                    next() // FUNGSI INI BUAT APA PAK ?
+                } else {
+                    rsult.json({
+                        message: "Invalid Token"
+                    })
+                }
+            })
+        }
+    }
+} 
